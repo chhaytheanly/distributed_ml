@@ -1,0 +1,198 @@
+services:
+
+  spark-master:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    image: apache-spark:3.5.3
+    container_name: spark-master
+    hostname: spark-master
+
+    command:
+      - /opt/spark/bin/spark-class
+      - org.apache.spark.deploy.master.Master
+      - --host
+      - spark-master
+      - --port
+      - "7077"
+      - --webui-port
+      - "8080"
+
+    environment:
+      DATA_DIR: /workspace/src/data
+      OUTPUT_DIR: /workspace/output
+      POSTGRES_URL: jdbc:postgresql://postgres:5432/dist_f1
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root168
+
+    volumes:
+      - ./src:/workspace/src
+      - ./output:/workspace/output
+      - spark-events:/opt/spark/events
+
+    ports:
+      - "7077:7077"
+      - "8080:8080"
+
+  spark-worker-1:
+    image: apache-spark:3.5.3
+    container_name: spark-worker-1
+    hostname: spark-worker-1
+
+    command:
+      - /bin/bash
+      - -lc
+      - >
+        /opt/spark/bin/spark-class
+        org.apache.spark.deploy.worker.Worker
+        spark://spark-master:7077
+        --cores ${SPARK_WORKER_CORES:-2}
+        --memory ${SPARK_WORKER_MEMORY:-2g}
+        --webui-port 8081
+
+    environment:
+      DATA_DIR: /workspace/src/data
+      OUTPUT_DIR: /workspace/output
+
+    volumes:
+      - ./src:/workspace/src
+      - ./output:/workspace/output
+      - spark-worker-1:/opt/spark/work
+
+    ports:
+      - "8081:8081"
+
+    depends_on:
+      - spark-master
+
+  spark-worker-2:
+    image: apache-spark:3.5.3
+    container_name: spark-worker-2
+    hostname: spark-worker-2
+
+    command:
+      - /bin/bash
+      - -lc
+      - >
+        /opt/spark/bin/spark-class
+        org.apache.spark.deploy.worker.Worker
+        spark://spark-master:7077
+        --cores ${SPARK_WORKER_CORES:-2}
+        --memory ${SPARK_WORKER_MEMORY:-2g}
+        --webui-port 8081
+
+    environment:
+      DATA_DIR: /workspace/src/data
+      OUTPUT_DIR: /workspace/output
+
+    volumes:
+      - ./src:/workspace/src
+      - ./output:/workspace/output
+      - spark-worker-2:/opt/spark/work
+
+    ports:
+      - "8082:8081"
+
+    depends_on:
+      - spark-master
+
+  spark-submit:
+    image: apache-spark:3.5.3
+    container_name: spark-submit
+
+    profiles:
+      - job
+
+    command:
+      - /opt/spark/bin/spark-submit
+      - --master
+      - spark://spark-master:7077
+      - --deploy-mode
+      - client
+      - --driver-memory
+      - 2g
+      - --executor-memory
+      - 2g
+      - --executor-cores
+      - "1"
+      - --total-executor-cores
+      - "4"
+      - /workspace/src/app/ml_ready.py
+
+    environment:
+      SPARK_MASTER_URL: spark://spark-master:7077
+      SPARK_SHUFFLE_PARTITIONS: "8"
+      OUTPUT_CSV_PARTITIONS: "1"
+
+      DATA_DIR: /workspace/src/data
+      OUTPUT_DIR: /workspace/output
+
+      POSTGRES_URL: jdbc:postgresql://postgres:5432/dist_f1
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root168
+
+    volumes:
+      - ./src:/workspace/src
+      - ./output:/workspace/output
+      - spark-events:/opt/spark/events
+
+    ports:
+      - "4040:4040"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      spark-master:
+        condition: service_started
+      spark-worker-1:
+        condition: service_started
+      spark-worker-2:
+        condition: service_started
+
+  postgres:
+    image: postgres:16
+    container_name: postgres_dist
+
+    environment:
+      POSTGRES_DB: dist_f1
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root168
+
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./src/app/sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+    ports:
+      - "4321:5432"
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root -d dist_f1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin_dist
+
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+
+    ports:
+      - "5050:80"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  pgadmin-data:
+  spark-events:
+  spark-worker-1:
+  spark-worker-2:
