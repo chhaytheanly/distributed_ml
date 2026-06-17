@@ -5,6 +5,7 @@ USER root
 RUN apt-get update && apt-get install -y \
     curl \
     python3-pip \
+    python3-venv \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -12,22 +13,15 @@ RUN curl -fsSL \
     -o /opt/spark/jars/postgresql-42.7.2.jar \
     https://jdbc.postgresql.org/download/postgresql-42.7.2.jar
 
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV VENV=/opt/venv
+RUN python3 -m venv $VENV
 
-ENV PATH="/root/.local/bin:${PATH}"
+COPY pyproject.toml ./
+RUN $VENV/bin/pip install --no-cache-dir numpy pandas pyarrow joblib fastapi uvicorn pydantic
 
-WORKDIR /tmp/build
-
-COPY pyproject.toml uv.lock ./
-
-RUN uv venv /opt/venv && \
-    uv sync --frozen --python /opt/venv/bin/python
-
-# RUN uv add pyspark --python /opt/venv/bin/python
-
-ENV PATH="/opt/venv/bin:${PATH}"
-ENV PYSPARK_PYTHON=/opt/venv/bin/python
-ENV PYSPARK_DRIVER_PYTHON=/opt/venv/bin/python
+ENV PATH="$VENV/bin:${PATH}"
+ENV PYSPARK_PYTHON=$VENV/bin/python
+ENV PYSPARK_DRIVER_PYTHON=$VENV/bin/python
 
 RUN mkdir -p \
     /workspace/src \

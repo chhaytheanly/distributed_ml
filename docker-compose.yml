@@ -4,11 +4,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-
     image: apache-spark:3.5.3
     container_name: spark-master
     hostname: spark-master
-
     command:
       - /opt/spark/bin/spark-class
       - org.apache.spark.deploy.master.Master
@@ -18,19 +16,17 @@ services:
       - "7077"
       - --webui-port
       - "8080"
-
     environment:
-      DATA_DIR: /workspace/src/data
+      DATA_DIR: /workspace/dataset
       OUTPUT_DIR: /workspace/output
       POSTGRES_URL: jdbc:postgresql://postgres:5432/dist_f1
       POSTGRES_USER: root
       POSTGRES_PASSWORD: root168
-
     volumes:
       - ./src:/workspace/src
       - ./output:/workspace/output
+      - ./dataset:/workspace/dataset
       - spark-events:/opt/spark/events
-
     ports:
       - "7077:7077"
       - "8080:8080"
@@ -39,7 +35,6 @@ services:
     image: apache-spark:3.5.3
     container_name: spark-worker-1
     hostname: spark-worker-1
-
     command:
       - /bin/bash
       - -lc
@@ -50,19 +45,16 @@ services:
         --cores ${SPARK_WORKER_CORES:-2}
         --memory ${SPARK_WORKER_MEMORY:-2g}
         --webui-port 8081
-
     environment:
-      DATA_DIR: /workspace/src/data
+      DATA_DIR: /workspace/dataset
       OUTPUT_DIR: /workspace/output
-
     volumes:
       - ./src:/workspace/src
       - ./output:/workspace/output
+      - ./dataset:/workspace/dataset
       - spark-worker-1:/opt/spark/work
-
     ports:
       - "8081:8081"
-
     depends_on:
       - spark-master
 
@@ -70,7 +62,6 @@ services:
     image: apache-spark:3.5.3
     container_name: spark-worker-2
     hostname: spark-worker-2
-
     command:
       - /bin/bash
       - -lc
@@ -81,29 +72,24 @@ services:
         --cores ${SPARK_WORKER_CORES:-2}
         --memory ${SPARK_WORKER_MEMORY:-2g}
         --webui-port 8081
-
     environment:
-      DATA_DIR: /workspace/src/data
+      DATA_DIR: /workspace/dataset
       OUTPUT_DIR: /workspace/output
-
     volumes:
       - ./src:/workspace/src
       - ./output:/workspace/output
+      - ./dataset:/workspace/dataset
       - spark-worker-2:/opt/spark/work
-
     ports:
       - "8082:8081"
-
     depends_on:
       - spark-master
 
   spark-submit:
     image: apache-spark:3.5.3
     container_name: spark-submit
-
     profiles:
       - job
-
     command:
       - /opt/spark/bin/spark-submit
       - --master
@@ -118,28 +104,23 @@ services:
       - "1"
       - --total-executor-cores
       - "4"
-      - /workspace/src/app/ml_ready.py
-
+      - /workspace/src/run_pipeline.py
     environment:
       SPARK_MASTER_URL: spark://spark-master:7077
       SPARK_SHUFFLE_PARTITIONS: "8"
       OUTPUT_CSV_PARTITIONS: "1"
-
-      DATA_DIR: /workspace/src/data
+      DATA_DIR: /workspace/dataset
       OUTPUT_DIR: /workspace/output
-
       POSTGRES_URL: jdbc:postgresql://postgres:5432/dist_f1
       POSTGRES_USER: root
       POSTGRES_PASSWORD: root168
-
     volumes:
       - ./src:/workspace/src
       - ./output:/workspace/output
+      - ./dataset:/workspace/dataset
       - spark-events:/opt/spark/events
-
     ports:
       - "4040:4040"
-
     depends_on:
       postgres:
         condition: service_healthy
@@ -150,22 +131,19 @@ services:
       spark-worker-2:
         condition: service_started
 
+
   postgres:
     image: postgres:16
     container_name: postgres_dist
-
     environment:
       POSTGRES_DB: dist_f1
       POSTGRES_USER: root
       POSTGRES_PASSWORD: root168
-
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./src/app/sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-
+      - ./src/sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     ports:
       - "4321:5432"
-
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U root -d dist_f1"]
       interval: 5s
@@ -175,20 +153,55 @@ services:
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: pgadmin_dist
-
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@gmail.com
       PGADMIN_DEFAULT_PASSWORD: admin
-
     volumes:
       - pgadmin-data:/var/lib/pgadmin
-
     ports:
       - "5050:80"
-
     depends_on:
       postgres:
         condition: service_healthy
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: airquality-api
+    hostname: airquality-api
+    command:
+      - uvicorn
+      - src.api.main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+    environment:
+      OUTPUT_DIR: /workspace/output
+      DATA_DIR: /workspace/dataset
+      POSTGRES_URL: jdbc:postgresql://postgres:5432/dist_f1
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root168
+    volumes:
+      - ./src:/workspace/src
+      - ./output:/workspace/output
+      - ./dataset:/workspace/dataset
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: airquality-web
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
 
 volumes:
   postgres-data:

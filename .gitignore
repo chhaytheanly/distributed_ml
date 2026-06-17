@@ -10,6 +10,8 @@ wheels/
 .venv
 .env
 
-src/data/
+dataset/
 
 output/
+
+web/node_modules/
