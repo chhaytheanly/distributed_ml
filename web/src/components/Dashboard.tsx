@@ -28,6 +28,7 @@ import {
 } from "./ui/chart";
 import { Badge } from "./ui/badge";
 import { Wind, Cloud, Activity, Thermometer } from "lucide-react";
+import { API_BASE } from "../App";
 
 interface CitySummary {
   city: string;
@@ -60,7 +61,7 @@ export default function Dashboard() {
   );
 
   useEffect(() => {
-    fetch("/api/data/summary")
+    fetch(`${API_BASE}/data/summary`)
       .then((r) => r.json())
       .then((d: CitySummary[]) =>
         setData(d.map((c) => ({ ...c, city: c.city.charAt(0).toUpperCase() + c.city.slice(1) })))

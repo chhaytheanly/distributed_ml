@@ -13,7 +13,9 @@ RUN curl -fsSL \
     https://jdbc.postgresql.org/download/postgresql-42.7.2.jar
 
 COPY pyproject.toml ./
-RUN pip install --no-cache-dir numpy pandas pyarrow joblib fastapi uvicorn pydantic pyspark sqlalchemy
+
+RUN pip install numpy pandas pyarrow joblib fastapi uvicorn pydantic sqlalchemy  \
+    torch --index-url https://download.pytorch.org/whl/cpu
 
 RUN mkdir -p \
     /workspace/src \

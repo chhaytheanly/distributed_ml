@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { API_BASE } from "../App";
 
 interface PredictionResult {
   pm10_prediction: number;
@@ -50,7 +51,7 @@ export default function PredictionForm() {
     setError("");
 
     try {
-      const res = await fetch("/api/predict", {
+      const res = await fetch(`${API_BASE}/predict`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),

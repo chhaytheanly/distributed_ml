@@ -167,31 +167,16 @@ services:
   api:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: src/api/Dockerfile
     container_name: airquality-api
     hostname: airquality-api
-    command:
-      - uvicorn
-      - src.api.main:app
-      - --host
-      - 0.0.0.0
-      - --port
-      - "8000"
     environment:
       OUTPUT_DIR: /workspace/output
-      DATA_DIR: /workspace/dataset
-      POSTGRES_URL: jdbc:postgresql://postgres:5432/dist_f1
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: root168
     volumes:
       - ./src:/workspace/src
       - ./output:/workspace/output
-      - ./dataset:/workspace/dataset
     ports:
       - "8000:8000"
-    depends_on:
-      postgres:
-        condition: service_healthy
 
   web:
     build:
