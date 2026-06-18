@@ -1,4 +1,8 @@
 import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 
 interface PredictionResult {
   pm10_prediction: number;
@@ -68,149 +72,145 @@ export default function PredictionForm() {
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <div className="rounded-lg border bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-lg font-semibold text-zinc-800">
-          Input Features
-        </h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm text-zinc-600">City</label>
-              <select
-                value={form.city}
-                onChange={(e) => setForm((p) => ({ ...p, city: e.target.value }))}
-                className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
-              >
-                {CITIES.map((c) => (
-                  <option key={c} value={c}>
-                    {c.charAt(0).toUpperCase() + c.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm text-zinc-600">Season</label>
-              <select
-                value={form.season}
-                onChange={(e) => setForm((p) => ({ ...p, season: e.target.value }))}
-                className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
-              >
-                {SEASONS.map((s) => (
-                  <option key={s} value={s}>
-                    {s.charAt(0).toUpperCase() + s.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm text-zinc-600">
-                Temp (°C)
-              </label>
-              <input
-                type="number"
-                value={form.temp}
-                onChange={(e) => handleChange("temp", e.target.value)}
-                className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-zinc-600">
-                Humidity (%)
-              </label>
-              <input
-                type="number"
-                value={form.relative_humidity}
-                onChange={(e) => handleChange("relative_humidity", e.target.value)}
-                className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-zinc-600">
-                PM10 (µg/m³)
-              </label>
-              <input
-                type="number"
-                value={form.pm10}
-                onChange={(e) => handleChange("pm10", e.target.value)}
-                className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-zinc-600">
-                PM2.5 (µg/m³)
-              </label>
-              <input
-                type="number"
-                value={form.pm2_5}
-                onChange={(e) => handleChange("pm2_5", e.target.value)}
-                className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-zinc-600">
-                NO₂ (ppb)
-              </label>
-              <input
-                type="number"
-                value={form.no2}
-                onChange={(e) => handleChange("no2", e.target.value)}
-                className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-zinc-600">
-                O₃ (ppb)
-              </label>
-              <input
-                type="number"
-                value={form.o3}
-                onChange={(e) => handleChange("o3", e.target.value)}
-                className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-md bg-zinc-900 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50"
-          >
-            {loading ? "Predicting..." : "Run Prediction"}
-          </button>
-        </form>
-      </div>
-
-      <div>
-        {result && (
-          <div className="rounded-lg border bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-semibold text-zinc-800">
-              Prediction Results
-            </h2>
-            <div className="space-y-4">
-              {[
-                { label: "PM10 (24h mean)", value: result.pm10_prediction, unit: "µg/m³" },
-                { label: "PM2.5 (24h mean)", value: result.pm25_prediction, unit: "µg/m³" },
-                { label: "O₃ (24h max)", value: result.o3_prediction, unit: "ppb" },
-              ].map((item) => (
-                <div
-                  key={item.label}
-                  className="flex items-center justify-between rounded-md bg-zinc-50 px-4 py-3"
+      <Card>
+        <CardHeader>
+          <CardTitle>Input Features</CardTitle>
+          <CardDescription>
+            Enter sensor readings and environmental factors
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="city">City</Label>
+                <select
+                  id="city"
+                  value={form.city}
+                  onChange={(e) => setForm((p) => ({ ...p, city: e.target.value }))}
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 >
-                  <span className="text-sm text-zinc-600">{item.label}</span>
-                  <span className="text-lg font-bold text-zinc-900">
-                    {item.value.toFixed(1)}{" "}
-                    <span className="text-sm font-normal text-zinc-400">
-                      {item.unit}
-                    </span>
-                  </span>
-                </div>
-              ))}
+                  {CITIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c.charAt(0).toUpperCase() + c.slice(1)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="season">Season</Label>
+                <select
+                  id="season"
+                  value={form.season}
+                  onChange={(e) => setForm((p) => ({ ...p, season: e.target.value }))}
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  {SEASONS.map((s) => (
+                    <option key={s} value={s}>
+                      {s.charAt(0).toUpperCase() + s.slice(1)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="temp">Temp (°C)</Label>
+                <Input
+                  id="temp"
+                  type="number"
+                  value={form.temp}
+                  onChange={(e) => handleChange("temp", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="humidity">Humidity (%)</Label>
+                <Input
+                  id="humidity"
+                  type="number"
+                  value={form.relative_humidity}
+                  onChange={(e) => handleChange("relative_humidity", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="pm10">PM10 (µg/m³)</Label>
+                <Input
+                  id="pm10"
+                  type="number"
+                  value={form.pm10}
+                  onChange={(e) => handleChange("pm10", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="pm25">PM2.5 (µg/m³)</Label>
+                <Input
+                  id="pm25"
+                  type="number"
+                  value={form.pm2_5}
+                  onChange={(e) => handleChange("pm2_5", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="no2">NO₂ (ppb)</Label>
+                <Input
+                  id="no2"
+                  type="number"
+                  value={form.no2}
+                  onChange={(e) => handleChange("no2", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="o3">O₃ (ppb)</Label>
+                <Input
+                  id="o3"
+                  type="number"
+                  value={form.o3}
+                  onChange={(e) => handleChange("o3", e.target.value)}
+                />
+              </div>
             </div>
-          </div>
+
+            <Button type="submit" disabled={loading} className="w-full">
+              {loading ? "Predicting..." : "Run Prediction"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <div className="space-y-4">
+        {result && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Prediction Results</CardTitle>
+              <CardDescription>
+                Forecasted pollutant levels for the next 24 hours
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {[
+                  { label: "PM10 (24h mean)", value: result.pm10_prediction, unit: "µg/m³" },
+                  { label: "PM2.5 (24h mean)", value: result.pm25_prediction, unit: "µg/m³" },
+                  { label: "O₃ (24h max)", value: result.o3_prediction, unit: "ppb" },
+                ].map((item) => (
+                  <div
+                    key={item.label}
+                    className="flex items-center justify-between rounded-lg bg-muted/50 px-4 py-3"
+                  >
+                    <span className="text-sm text-muted-foreground">{item.label}</span>
+                    <span className="text-lg font-bold tabular-nums text-foreground">
+                      {item.value.toFixed(1)}{" "}
+                      <span className="text-sm font-normal text-muted-foreground">
+                        {item.unit}
+                      </span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {error && (
-          <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive">
             {error}
           </div>
         )}

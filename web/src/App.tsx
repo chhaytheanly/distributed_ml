@@ -19,14 +19,14 @@ function App() {
   ];
 
   return (
-    <div className="min-h-screen bg-zinc-50">
-      <header className="border-b bg-white shadow-sm">
+    <div className="min-h-screen bg-background">
+      <header className="border-b bg-card shadow-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
           <div>
-            <h1 className="text-xl font-bold text-zinc-900">
+            <h1 className="text-xl font-bold text-foreground">
               Air Quality Monitor
             </h1>
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-muted-foreground">
               Athens · Ancona · Zaragoza
             </p>
           </div>
@@ -37,8 +37,8 @@ function App() {
                 onClick={() => setActiveTab(t.key)}
                 className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
                   activeTab === t.key
-                    ? "bg-zinc-900 text-white"
-                    : "text-zinc-600 hover:bg-zinc-100"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                 }`}
               >
                 {t.label}
