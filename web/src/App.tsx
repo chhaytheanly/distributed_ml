@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { LayoutDashboard, LineChart, Sparkles, Moon, Sun } from "lucide-react";
 import Dashboard from "./components/Dashboard";
 import PredictionForm from "./components/PredictionForm";
 import ModelInsights from "./components/ModelInsights";
@@ -11,47 +12,73 @@ export { API_BASE };
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
+  const [dark, setDark] = useState(() => {
+    if (typeof window !== "undefined") {
+      return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    }
+    return false;
+  });
 
-  const tabs: { key: Tab; label: string }[] = [
-    { key: "dashboard", label: "Dashboard" },
-    { key: "predict", label: "Predict" },
-    { key: "insights", label: "Model Insights" },
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", dark);
+  }, [dark]);
+
+  const tabs: { key: Tab; label: string; icon: typeof LayoutDashboard }[] = [
+    { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { key: "predict", label: "Predict", icon: LineChart },
+    { key: "insights", label: "Model Insights", icon: Sparkles },
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card shadow-sm">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
+    <div className="min-h-screen bg-background transition-colors duration-300">
+      <header className="sticky top-0 z-50 glass border-b border-border/40">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           <div>
-            <h1 className="text-xl font-bold text-foreground">
+            <h1 className="text-lg font-bold text-foreground">
               Air Quality Monitor
             </h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Athens · Ancona · Zaragoza
             </p>
           </div>
-          <nav className="flex gap-1">
-            {tabs.map((t) => (
-              <button
-                key={t.key}
-                onClick={() => setActiveTab(t.key)}
-                className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-                  activeTab === t.key
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </nav>
+          <div className="flex items-center gap-1">
+            <nav className="flex gap-1 rounded-lg bg-muted/50 p-1">
+              {tabs.map((t) => {
+                const Icon = t.icon;
+                const isActive = activeTab === t.key;
+                return (
+                  <button
+                    key={t.key}
+                    onClick={() => setActiveTab(t.key)}
+                    className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200 ${
+                      isActive
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">{t.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+            <button
+              onClick={() => setDark((d) => !d)}
+              className="ml-2 flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-200"
+              aria-label="Toggle dark mode"
+            >
+              {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+          </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-6">
-        {activeTab === "dashboard" && <Dashboard />}
-        {activeTab === "predict" && <PredictionForm />}
-        {activeTab === "insights" && <ModelInsights />}
+      <main className="mx-auto max-w-6xl px-4 py-8">
+        <div className="animate-fade-in-up" key={activeTab}>
+          {activeTab === "dashboard" && <Dashboard />}
+          {activeTab === "predict" && <PredictionForm />}
+          {activeTab === "insights" && <ModelInsights />}
+        </div>
       </main>
     </div>
   );
