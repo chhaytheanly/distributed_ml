@@ -86,6 +86,9 @@ services:
       - spark-master
 
   spark-submit:
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: apache-spark:3.5.3
     container_name: spark-submit
     profiles:
@@ -164,29 +167,29 @@ services:
       postgres:
         condition: service_healthy
 
-  api:
-    build:
-      context: .
-      dockerfile: src/api/Dockerfile
-    container_name: airquality-api
-    hostname: airquality-api
-    environment:
-      OUTPUT_DIR: /workspace/output
-    volumes:
-      - ./src:/workspace/src
-      - ./output:/workspace/output
-    ports:
-      - "8000:8000"
+  # api:
+  #   build:
+  #     context: .
+  #     dockerfile: src/api/Dockerfile
+  #   container_name: airquality-api
+  #   hostname: airquality-api
+  #   environment:
+  #     OUTPUT_DIR: /workspace/output
+  #   volumes:
+  #     - ./src:/workspace/src
+  #     - ./output:/workspace/output
+  #   ports:
+  #     - "8000:8000"
 
-  web:
-    build:
-      context: ./web
-      dockerfile: Dockerfile
-    container_name: airquality-web
-    ports:
-      - "3000:80"
-    depends_on:
-      - api
+  # web:
+  #   build:
+  #     context: ./web
+  #     dockerfile: Dockerfile
+  #   container_name: airquality-web
+  #   ports:
+  #     - "3000:80"
+  #   depends_on:
+  #     - api
 
 volumes:
   postgres-data:

@@ -1,6 +1,6 @@
 import os
 import sys
-from pyspark.sql import Window
+from pyspark.sql import DataFrame, Window
 from pyspark.sql.functions import (
     col, year, month, dayofmonth, hour, dayofweek,
     when, sqrt, atan2, avg, max,
@@ -124,6 +124,16 @@ ML_FEATURE_COLUMNS = [
 ]
 
 
+def drop_nulls(df: DataFrame) -> DataFrame:
+    before = df.count()
+    df = df.dropna()
+    after = df.count()
+    dropped = before - after
+    if dropped:
+        print(f"[FE] Dropped {dropped:,} rows with null values ({dropped / before * 100:.1f}%)")
+    return df
+
+
 def build_ml_dataset(spark):
     props = get_pg_properties()
     print("[FE] Reading raw.air_quality from PostgreSQL")
@@ -145,6 +155,7 @@ def build_ml_dataset(spark):
 
     existing = [c for c in ML_FEATURE_COLUMNS if c in df.columns]
     df = df.select(*existing)
+    df = drop_nulls(df)
 
     print(f"[FE] ML-ready rows: {df.count():,}, columns: {len(df.columns)}")
     return df

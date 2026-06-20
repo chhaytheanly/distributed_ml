@@ -16,7 +16,6 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from config.session import get_spark_session
 from etl.spark_etl import load_and_unify, write_to_postgres
 from etl.feature_engineering import build_ml_dataset, write_ml_dataset
-from model.train import _prepare_data, train_target, save_model
 
 
 TARGETS = {
@@ -46,6 +45,7 @@ def run_feature_engineering(spark):
 
 
 def run_training(spark):
+    from model.train import _prepare_data, train_target, save_model
     print("\n" + "=" * 60)
     print("PHASE 3: ML Training — Gradient Boosted Trees")
     print("=" * 60)

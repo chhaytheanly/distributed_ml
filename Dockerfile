@@ -14,8 +14,7 @@ RUN curl -fsSL \
 
 COPY pyproject.toml ./
 
-RUN pip install numpy pandas pyarrow joblib fastapi uvicorn pydantic sqlalchemy  \
-    torch --index-url https://download.pytorch.org/whl/cpu
+RUN pip install numpy pandas pyarrow joblib fastapi uvicorn pydantic sqlalchemy 
 
 RUN mkdir -p \
     /workspace/src \

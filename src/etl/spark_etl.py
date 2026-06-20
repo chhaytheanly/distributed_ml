@@ -10,8 +10,6 @@ from pyspark.sql.types import DoubleType, IntegerType, StringType
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config.session import get_spark_session, get_pg_properties
 
-
-# ── Canonical column mapping ────────────────────────────────────────────────
 CANONICAL_COLUMNS = [
     "date", "latitude", "longitude", "station_name",
     "wind_speed_u", "wind_speed_v", "dewpoint_temp", "soil_temp",
@@ -63,8 +61,6 @@ CITIES_CONFIG = [
     },
 ]
 
-
-# ── Helpers ─────────────────────────────────────────────────────────────────
 
 def _rename_cols(df: DataFrame) -> DataFrame:
     for old, new in COLUMN_MAP.items():
@@ -120,26 +116,25 @@ def _clean(df: DataFrame) -> DataFrame:
     df = df.withColumn("date", to_timestamp("date"))
 
     pollutant_cols = ["pm10", "pm2_5", "no2", "o3"]
-    all_null = lit(True)
+    any_pollutant_not_null = lit(False)
     for c in pollutant_cols:
-        all_null = all_null & col(c).isNull()
-    df = df.filter(~all_null)
+        any_pollutant_not_null = any_pollutant_not_null | col(c).isNotNull()
+    df = df.filter(any_pollutant_not_null)
 
     impute_cols = pollutant_cols + [
         "wind_speed_u", "wind_speed_v", "dewpoint_temp", "soil_temp",
         "total_percipitation", "temp", "relative_humidity",
+        "vegetation_high", "vegetation_low",
     ]
-    agg_exprs = [expr(f"percentile_approx({c}, 0.5)").alias(c) for c in impute_cols]
-    medians = df.select(*agg_exprs).collect()[0].asDict()
-
     for c in impute_cols:
-        if medians[c] is not None:
-            df = df.withColumn(c, coalesce(col(c), lit(medians[c])))
+        median_val = df.select(expr(f"percentile_approx({c}, 0.5)")).collect()[0][0]
+        if median_val is not None:
+            df = df.withColumn(c, coalesce(col(c), lit(median_val)))
+        else:
+            df = df.withColumn(c, coalesce(col(c), lit(0.0)))
 
     return df
 
-
-# ── Main ETL ────────────────────────────────────────────────────────────────
 
 def load_and_unify(spark, data_dir: str = "/workspace/dataset") -> DataFrame:
     dfs = []

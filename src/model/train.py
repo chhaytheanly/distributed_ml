@@ -37,6 +37,13 @@ def prepare_features(df: pd.DataFrame):
 
     existing_cat = [c for c in CAT_COLS if c in X.columns]
     X = pd.get_dummies(X, columns=existing_cat, drop_first=False)
+
+    null_counts = X.isnull().sum()
+    null_cols = null_counts[null_counts > 0]
+    if not null_cols.empty:
+        print(f"[TRAIN] Filling {null_counts.sum():,} nulls across {len(null_cols)} columns")
+        X = X.fillna(X.median(numeric_only=True))
+
     feature_columns = X.columns.tolist()
 
     return X.values.astype(np.float32), y.astype(np.float32), feature_columns

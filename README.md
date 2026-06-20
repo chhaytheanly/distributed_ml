@@ -116,7 +116,7 @@ Outputs to **Parquet**, **CSV**, and **PostgreSQL 16**.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────┐
-│                         DOCKER COMPOSE ORCHESTRATION                              │
+│                         DOCKER COMPOSE ORCHESTRATION                             │
 ├──────────────────────────────────────────────────────────────────────────────────┤
 │  spark-master  │  spark-worker-1  │  spark-worker-2  │  postgres  │  pgadmin     │
 │  (Spark Master)│  (2 cores / 2g)  │  (2 cores / 2g)  │ (PG 16)    │  (Admin UI)  │
